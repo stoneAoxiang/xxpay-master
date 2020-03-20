@@ -120,6 +120,17 @@ public class PayOrderServiceImpl extends BaseService implements IPayOrderService
         return XXPayUtil.makeRetData(map, resKey);
     }
 
+    // 申请退款
+    public String refundOrder(String orderNo24){
+        PayOrder payOrder = super.baseSelectPayOrderByOrderNo24(orderNo24);
+        if(payOrder != null){
+            _log.warn("申请退款的本服务订单：{}  24服务端订单：{}", payOrder.getPayOrderId(), payOrder.getOrderNo24());
+        }
+
+//        payChannel4WxService.doWxRefundOrderReq(payOrder);
+        return "";
+    }
+
     @Override
     public Map createPayOrder(String jsonParam) {
         BaseParam baseParam = JsonUtil.getObjectFromJson(jsonParam, BaseParam.class);
@@ -138,7 +149,7 @@ public class PayOrderServiceImpl extends BaseService implements IPayOrderService
             _log.warn("新增支付订单失败, {}. jsonParam={}", RetEnum.RET_PARAM_INVALID.getMessage(), jsonParam);
             return RpcUtil.createFailResult(baseParam, RetEnum.RET_PARAM_INVALID);
         }
-        //创建支付订单
+        //创建支付订单,向t_pay_order表中写入支付订单数据
         int result = super.baseCreatePayOrder(payOrder);
         return RpcUtil.createBizResult(baseParam, result);
     }

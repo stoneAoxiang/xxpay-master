@@ -3,7 +3,6 @@ package org.xxpay.boot.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.xxpay.boot.service.impl.PayOrderServiceImpl;
 import org.xxpay.common.constant.PayConstant;
 import org.xxpay.common.util.MyLog;
 import org.xxpay.dal.dao.mapper.MchInfoMapper;
@@ -46,7 +45,23 @@ public class BaseService {
         return payChannelList.get(0);
     }
 
+    /**
+     * 根据24小时订单号获取记录
+     * @param orderNo24
+     * @return
+     */
+    public PayOrder baseSelectPayOrderByOrderNo24(String orderNo24){
+        PayOrderExample example = new PayOrderExample();
+        PayOrderExample.Criteria criteria = example.createCriteria();
+        criteria.andOrderNo24EqualTo(orderNo24);
+        List<PayOrder> payOrderList = payOrderMapper.selectByExample(example);
+        _log.info(payOrderList.isEmpty() ? "空记录" : payOrderList.get(0).toString());
+        return payOrderList.isEmpty() ? null : payOrderList.get(0);
+//        return CollectionUtils.isEmpty(payOrderList) ? null : payOrderList.get(0);
+    }
+
     public int baseCreatePayOrder(PayOrder payOrder) {
+        _log.info("创建支付订单,向t_pay_order表中插入支付订单数据");
         return payOrderMapper.insertSelective(payOrder);
     }
 
@@ -74,6 +89,7 @@ public class BaseService {
     }
 
     public int baseUpdateStatus4Ing(String payOrderId, String channelOrderNo) {
+        _log.info("更新支付订单:{}的渠道订单号:{}", payOrderId, channelOrderNo);
         PayOrder payOrder = new PayOrder();
         payOrder.setStatus(PayConstant.PAY_STATUS_PAYING);
         if(channelOrderNo != null) payOrder.setChannelOrderNo(channelOrderNo);
@@ -114,6 +130,7 @@ public class BaseService {
         newPayOrder.setNotifyCount(count);
         newPayOrder.setLastNotifyTime(System.currentTimeMillis());
         newPayOrder.setPayOrderId(payOrderId);
+        _log.info("修改支付订单通知次数,根据订单号：{}修改t_pay_order表中支付订单通知次数", payOrderId);
         return payOrderMapper.updateByPrimaryKeySelective(newPayOrder);
     }
 

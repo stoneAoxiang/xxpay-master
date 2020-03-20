@@ -41,7 +41,7 @@ public class RpcUtil {
     public static Map<String, Object> createBizResult(RpcBaseParam baseParam, Object obj) {
         Map<String, Object> resultMap = createResultMap(baseParam, RetEnum.RET_SUCCESS);
         resultMap.put(Constant.BIZ_RESULT_KEY, obj);
-        _log.info("构建支付商户信息:{}", resultMap);
+        _log.info("构建支付商户成功返回信息:{}", resultMap);
         return resultMap;
     }
     public static Map<String, Object> createBizResultWithDBError(RpcBaseParam baseParam, Object obj,

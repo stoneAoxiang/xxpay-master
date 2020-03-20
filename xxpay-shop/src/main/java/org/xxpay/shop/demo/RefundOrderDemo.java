@@ -44,7 +44,7 @@ public class RefundOrderDemo {
         paramMap.put("notifyUrl", notifyUrl);                       // 回调URL
         paramMap.put("param1", "");                                 // 扩展参数1
         paramMap.put("param2", "");                                 // 扩展参数2
-        paramMap.put("channelUser", "jmdhappy@126.com");  // 微信openId:oIkQuwhPgPUgl-TvQ48_UUpZUwMs(丁志伟)
+        paramMap.put("channelUser", "jmdhappy@126.com");  // 微信openId:oQlKc1cobi_Iad8DGCMJsnVi3Dkg(敖翔)
         paramMap.put("payOrderId", "P0020171114192121000003");
 
 

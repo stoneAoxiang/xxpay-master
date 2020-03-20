@@ -1797,6 +1797,77 @@ public class PayOrderExample implements Serializable {
             addCriterion("UpdateTime not between", value1, value2, "updateTime");
             return (Criteria) this;
         }
+
+        //====================================================
+        public Criteria andOrderNo24IsNull() {
+            addCriterion("OrderNo24 is null");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24IsNotNull() {
+            addCriterion("OrderNo24 is not null");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24EqualTo(String value) {
+            addCriterion("OrderNo24 =", value, "orderNo24");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24NotEqualTo(String value) {
+            addCriterion("OrderNo24 <>", value, "orderNo24");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24GreaterThan(String value) {
+            addCriterion("OrderNo24 >", value, "orderNo24");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24GreaterThanOrEqualTo(String value) {
+            addCriterion("OrderNo24 >=", value, "orderNo24");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24LessThan(String value) {
+            addCriterion("OrderNo24 <", value, "orderNo24");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24LessThanOrEqualTo(String value) {
+            addCriterion("OrderNo24 <=", value, "orderNo24");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24Like(String value) {
+            addCriterion("OrderNo24 like", value, "orderNo24");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24NotLike(String value) {
+            addCriterion("OrderNo24 not like", value, "orderNo24");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24In(List<String> values) {
+            addCriterion("OrderNo24 in", values, "orderNo24");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24NotIn(List<String> values) {
+            addCriterion("OrderNo24 not in", values, "orderNo24");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24Between(String value1, String value2) {
+            addCriterion("OrderNo24 between", value1, value2, "orderNo24");
+            return (Criteria) this;
+        }
+
+        public Criteria andOrderNo24NotBetween(String value1, String value2) {
+            addCriterion("OrderNo24 not between", value1, value2, "orderNo24");
+            return (Criteria) this;
+        }
     }
 
     public static class Criteria extends GeneratedCriteria implements Serializable {

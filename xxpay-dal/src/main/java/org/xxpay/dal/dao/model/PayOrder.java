@@ -186,6 +186,13 @@ public class PayOrder implements Serializable {
      */
     private String autoNotifyUrl;
 
+    /**
+     * 24小时订单号
+     *
+     * @mbggenerated
+     */
+    private String orderNo24;
+
     private static final long serialVersionUID = 1L;
 
     public String getPayOrderId() {
@@ -396,6 +403,14 @@ public class PayOrder implements Serializable {
         this.autoNotifyUrl = autoNotifyUrl;
     }
 
+    public String getOrderNo24() {
+        return orderNo24;
+    }
+
+    public void setOrderNo24(String orderNo24) {
+        this.orderNo24 = orderNo24;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -428,6 +443,7 @@ public class PayOrder implements Serializable {
         sb.append(", createTime=").append(createTime);
         sb.append(", updateTime=").append(updateTime);
         sb.append(", autoNotifyUrl=").append(autoNotifyUrl);
+        sb.append(", orderNo24=").append(orderNo24);
 
         sb.append("]");
         return sb.toString();
@@ -470,7 +486,9 @@ public class PayOrder implements Serializable {
             && (this.getPaySuccTime() == null ? other.getPaySuccTime() == null : this.getPaySuccTime().equals(other.getPaySuccTime()))
             && (this.getCreateTime() == null ? other.getCreateTime() == null : this.getCreateTime().equals(other.getCreateTime()))
             && (this.getUpdateTime() == null ? other.getUpdateTime() == null : this.getUpdateTime().equals(other.getUpdateTime()))
-            && (this.getAutoNotifyUrl() == null ? other.getAutoNotifyUrl() == null : this.getAutoNotifyUrl().equals(other.getAutoNotifyUrl()));
+            && (this.getAutoNotifyUrl() == null ? other.getAutoNotifyUrl() == null : this.getAutoNotifyUrl().equals(other.getAutoNotifyUrl()))
+            && (this.getOrderNo24() == null ? other.getOrderNo24() == null : this.getOrderNo24().equals(other.getOrderNo24()));
+
     }
 
     @Override
@@ -503,6 +521,7 @@ public class PayOrder implements Serializable {
         result = prime * result + ((getCreateTime() == null) ? 0 : getCreateTime().hashCode());
         result = prime * result + ((getUpdateTime() == null) ? 0 : getUpdateTime().hashCode());
         result = prime * result + ((getAutoNotifyUrl() == null) ? 0 : getAutoNotifyUrl().hashCode());
+        result = prime * result + ((getOrderNo24() == null) ? 0 : getOrderNo24().hashCode());
         return result;
     }
 }

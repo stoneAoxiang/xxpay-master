@@ -3,7 +3,6 @@ package org.xxpay.mgr.service;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.xxpay.common.constant.PayConstant;
 import org.xxpay.dal.dao.mapper.PayOrderMapper;
 import org.xxpay.dal.dao.model.PayOrder;
 import org.xxpay.dal.dao.model.PayOrderExample;

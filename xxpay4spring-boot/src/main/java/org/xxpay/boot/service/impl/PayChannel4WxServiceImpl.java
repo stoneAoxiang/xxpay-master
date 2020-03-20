@@ -2,7 +2,9 @@ package org.xxpay.boot.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.github.binarywang.wxpay.bean.request.WxPayRefundRequest;
 import com.github.binarywang.wxpay.bean.request.WxPayUnifiedOrderRequest;
+import com.github.binarywang.wxpay.bean.result.WxPayRefundResult;
 import com.github.binarywang.wxpay.bean.result.WxPayUnifiedOrderResult;
 import com.github.binarywang.wxpay.config.WxPayConfig;
 import com.github.binarywang.wxpay.constant.WxPayConstants;
@@ -21,6 +23,7 @@ import org.xxpay.common.enumm.RetEnum;
 import org.xxpay.common.util.*;
 import org.xxpay.dal.dao.model.PayChannel;
 import org.xxpay.dal.dao.model.PayOrder;
+import org.xxpay.dal.dao.model.RefundOrder;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
@@ -67,6 +70,7 @@ public class PayChannel4WxServiceImpl extends BaseService implements IPayChannel
             JSONObject paramObj = JSON.parseObject(payChannel.getParam());
             _log.info("{}商家KEY:{}", logPrefix, paramObj.getString("key"));
             _log.info("{}证书地址:{}", logPrefix, wxPayProperties.getCertRootPath());
+            _log.info("{}支付成功回调地址:{}", logPrefix, wxPayProperties.getNotifyUrl());
             WxPayConfig wxPayConfig = WxPayUtil.getWxPayConfig(payChannel.getParam(), tradeType, wxPayProperties.getCertRootPath(), wxPayProperties.getNotifyUrl());
             WxPayService wxPayService = new WxPayServiceImpl();
             wxPayService.setConfig(wxPayConfig);
@@ -78,7 +82,8 @@ public class PayChannel4WxServiceImpl extends BaseService implements IPayChannel
             _log.info("{} 支付订单号{}", logPrefix, payOrderId);
             WxPayUnifiedOrderResult wxPayUnifiedOrderResult;
             try {
-                _log.info("{} 微信统一支付请求{}", logPrefix, wxPayUnifiedOrderRequest.toXML());
+//                _log.info("{} 微信统一支付请求{}", logPrefix, wxPayUnifiedOrderRequest.toXML());
+                // 调用微信统一下单
                 wxPayUnifiedOrderResult = wxPayService.unifiedOrder(wxPayUnifiedOrderRequest);
                 _log.info("{} >>> 下单成功", logPrefix);
                 Map<String, Object> map = new HashMap<>();
@@ -108,7 +113,10 @@ public class PayChannel4WxServiceImpl extends BaseService implements IPayChannel
                         configMap.put("noncestr", nonceStr);
                         configMap.put("appid", appId);
                         // 此map用于客户端与微信服务器交互
-                        payInfo.put("sign", SignUtils.createSign(configMap, wxPayConfig.getMchKey(), null));
+                        //weixin-java-pay-2.8.0版本
+//                        payInfo.put("sign", SignUtils.createSign(configMap, wxPayConfig.getMchKey(), null));
+                        //weixin-java-pay-3.1.0版本//
+                        payInfo.put("sign", SignUtils.createSign(configMap, wxPayConfig.getMchKey()));
                         payInfo.put("prepayid", wxPayUnifiedOrderResult.getPrepayId());
                         payInfo.put("partnerid", partnerId);
                         payInfo.put("appid", appId);
@@ -119,6 +127,7 @@ public class PayChannel4WxServiceImpl extends BaseService implements IPayChannel
                         break;
                     }
                     case PayConstant.WxConstant.TRADE_TYPE_JSPAI : {
+                        _log.info("{} 微信交易类型：JSAPI", logPrefix);
                         Map<String, String> payInfo = new HashMap<>();
                         String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
                         String nonceStr = String.valueOf(System.currentTimeMillis());
@@ -128,7 +137,10 @@ public class PayChannel4WxServiceImpl extends BaseService implements IPayChannel
                         payInfo.put("nonceStr", nonceStr);
                         payInfo.put("package", "prepay_id=" + wxPayUnifiedOrderResult.getPrepayId());
                         payInfo.put("signType", WxPayConstants.SignType.MD5);
-                        payInfo.put("paySign", SignUtils.createSign(payInfo, wxPayConfig.getMchKey(), null));
+                        //weixin-java-pay-2.8.0版本
+//                        payInfo.put("paySign", SignUtils.createSign(payInfo, wxPayConfig.getMchKey(), null));
+                        //weixin-java-pay-3.1.0版本
+                        payInfo.put("paySign", SignUtils.createSign(payInfo, wxPayConfig.getMchKey()));
                         map.put("payParams", payInfo);
                         break;
                     }
@@ -155,6 +167,28 @@ public class PayChannel4WxServiceImpl extends BaseService implements IPayChannel
 
             //return XXPayUtil.makeRetFail(XXPayUtil.makeRetMap(PayConstant.RETURN_VALUE_FAIL, "", PayConstant.RETURN_VALUE_FAIL, PayEnum.ERR_0001));
         }
+    }
+
+    public String doWxRefundOrderReq(RefundOrder refundOrder) {
+        String logPrefix = "【微信申请退款】-> doWxRefundOrderReq";
+        PayChannel payChannel = super.baseSelectPayChannel(refundOrder.getMchId(), refundOrder.getChannelId());
+        WxPayConfig wxPayConfig = WxPayUtil.getWxPayConfig(payChannel.getParam(), payChannel.getChannelId(), wxPayProperties.getCertRootPath(), wxPayProperties.getRefundNotifyUrl());
+        WxPayService wxPayService = new WxPayServiceImpl();
+        wxPayService.setConfig(wxPayConfig);
+        WxPayRefundRequest wxPayRefundRequest = buildRefundRequest(refundOrder, wxPayConfig);
+        WxPayRefundResult wxPayRefundResult;
+        try {
+            wxPayRefundRequest.checkAndSign(wxPayConfig);
+            _log.info("{}获取签名:{}", logPrefix, wxPayRefundRequest.getSign());
+            // 调用微信申请退款
+            wxPayRefundResult = wxPayService.refund(wxPayRefundRequest);
+
+        } catch (WxPayException e) {
+            _log.error(e, "签名失败");
+            _log.info("err_code:{}", e.getErrCode());
+            _log.info("err_code_des:{}", e.getErrCodeDes());
+        }
+        return null;
     }
 
     /**
@@ -198,12 +232,43 @@ public class PayChannel4WxServiceImpl extends BaseService implements IPayChannel
         request.setTimeStart(timeStart);
         request.setTimeExpire(timeExpire);
         request.setGoodsTag(goodsTag);
-        request.setNotifyURL(notifyUrl);
+        //weixin-java-pay-2.8.0版本
+//        request.setNotifyURL(notifyUrl);
+        //weixin-java-pay-3.1.0版本
+        request.setNotifyUrl(notifyUrl);
         request.setTradeType(tradeType);
         request.setProductId(productId);
         request.setLimitPay(limitPay);
         request.setOpenid(openId);
         request.setSceneInfo(sceneInfo);
+
+        return request;
+    }
+
+    /**
+     * 构建微信申请退款请求数据
+     * @param refundOrder
+     * @param wxPayConfig
+     * @return
+     */
+    WxPayRefundRequest buildRefundRequest(RefundOrder refundOrder, WxPayConfig wxPayConfig) {
+        String outTradeNo = refundOrder.getPayOrderId();  //商户订单号
+        String transactionId = refundOrder.getChannelOrderNo();  //微信订单号
+        String outRefundNo = refundOrder.getMchRefundNo(); //商户退款单号
+        Integer totalFee = refundOrder.getPayAmount().intValue();// 订单金额,单位分
+        Integer refundFee = refundOrder.getRefundAmount().intValue();// 退款金额,单位分
+        String refundFeeType = "CNY"; //退款货币种类
+        String notifyUrl = wxPayConfig.getNotifyUrl(); //退款结果通知url
+
+        // 微信申请退款请求对象
+        WxPayRefundRequest request = new WxPayRefundRequest();
+        request.setTransactionId(transactionId);
+        request.setOutTradeNo(outTradeNo);
+        request.setOutTradeNo(outRefundNo);
+        request.setTotalFee(totalFee);
+        request.setRefundFee(refundFee);
+        request.setRefundFeeType(refundFeeType);
+        request.setNotifyUrl(notifyUrl);
 
         return request;
     }

@@ -18,7 +18,6 @@ import org.xxpay.dal.dao.model.TransOrder;
 import org.xxpay.dal.dao.plugin.PageModel;
 import org.xxpay.mgr.service.TransOrderService;
 
-import java.util.Date;
 import java.util.List;
 
 @Controller

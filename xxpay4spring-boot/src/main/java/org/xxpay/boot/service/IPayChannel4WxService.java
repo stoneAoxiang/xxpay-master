@@ -1,5 +1,8 @@
 package org.xxpay.boot.service;
 
+import org.xxpay.dal.dao.model.PayOrder;
+import org.xxpay.dal.dao.model.RefundOrder;
+
 import java.util.Map;
 
 /**
@@ -10,5 +13,6 @@ import java.util.Map;
 public interface IPayChannel4WxService {
 
     Map doWxPayReq(String jsonParam);
+    String doWxRefundOrderReq(RefundOrder refundOrder);
 
 }

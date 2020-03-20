@@ -19,7 +19,6 @@ import org.xxpay.shop.dao.model.SelfPickup;
 import org.xxpay.shop.enums.DeliverStatusEnum;
 import org.xxpay.shop.service.GoodsOrderService;
 import org.xxpay.shop.util.Constant;
-import org.xxpay.shop.util.OAuth2RequestParamHelper;
 import org.xxpay.shop.util.ali.AliApi;
 import org.xxpay.shop.util.vx.WxApi;
 import org.xxpay.shop.util.vx.WxApiClient;
@@ -165,7 +164,6 @@ public class GoodsOrderController {
         paramMap.put("mchOrderNo", goodsOrder.getGoodsOrderId());           // 商户订单号
         paramMap.put("channelId", params.get("channelId"));             // 支付渠道ID, WX_NATIVE,ALIPAY_WAP
         paramMap.put("amount", goodsOrder.getAmount());                          // 支付金额,单位分
-        paramMap.put("autoNotifyUrl", params.get("autoNotifyUrl"));         //24小时通知出货URL
         paramMap.put("currency", "cny");                    // 币种, cny-人民币
         paramMap.put("clientIp", "114.112.124.236");        // 用户地址,IP或手机号
         paramMap.put("device", "WEB");                      // 设备
@@ -176,8 +174,18 @@ public class GoodsOrderController {
         paramMap.put("param1", "");                         // 扩展参数1
         paramMap.put("param2", "");                         // 扩展参数2
 
+        //以下2个参数为新增
+        paramMap.put("autoNotifyUrl", params.get("autoNotifyUrl"));         //24小时通知出货URL
+        paramMap.put("orderNo24", params.get("orderNo24"));         //24服务端生成的订单号
+        _log.info("autoNotifyUrl：{} orderNo24:{}", params.get("autoNotifyUrl"), params.get("orderNo24"));
+
         JSONObject extra = new JSONObject();
-        extra.put("openId", params.get("openId"));
+        if(params.get("channelId").toString().contains("WX")){
+            extra.put("openId", params.get("openId"));
+        }else {
+            extra.put("userId", params.get("userId"));
+        }
+
         paramMap.put("extra", extra.toJSONString());  // 附加参数
 
         String reqSign = PayDigestUtil.getSign(paramMap, reqKey);
@@ -220,7 +228,6 @@ public class GoodsOrderController {
             }
         }
         return "";
-
     }
 
     public static void main(String[] args){
@@ -273,6 +280,21 @@ public class GoodsOrderController {
 
 //    public String qrPay(ModelMap model, HttpServletRequest request, Long amount) {
 //public ModelAndView qrPay(ModelMap model, HttpServletRequest request, HttpServletResponse response, String assetId, String goodsName, String price, String productNum) {
+
+    /**
+     * 第一次调用：用户扫码后通过 “控制器/openQrPay.html”调用该方法，传入二维码参数如下：
+     * assetId=TY1905S0031&goodsName=200ml&productNum=6900404519259&price=2&orderNo=TY1905S0031-000317-1583393197804104&notify_url=http://www.dfbs-vm.com/api/pay/vipCommon/payback/5b3c66d593bd37030400039f/TY1905S0031/TY1905S0031-000317-1583393197804104
+     * 该二维码参数“orderNo”为24服务端生成的订单号，对应本服务端的“OrderNo24”；“notify_url”为支付成功后调用24服务端的回调地址，对应本服务端的“AutoNotifyUrl”
+     * 第二次调用：本方法对扫码用户的身份进行获取，如果没有得到用户身份，会重定向请求“getOpenId”或“getUserId”，获取到用户信息后，又重定向到本方法。由于本服务端的订单表中存在了
+     * “orderNo”（本服务端生成的订单号）和“notify_url”（调用支付成功后，通知本服务的回调）字段，为了和24服务端进行区分，“orderNo”用“OrderNo24”替换，
+     * “notify_url”用“AutoNotifyUrl”替换
+     * 对应第一次调用，autoNotifyUrl通过“notify_url”参数取得； OrderNo24通过“orderNo”参数取得
+     * 对应第二次调用，OrderNo24“orderNo”参数取得； OrderNo24通过“OrderNo24”参数取得
+     * @param model
+     * @param request
+     * @param response
+     * @return
+     */
     @RequestMapping("/qrPay.html")
     public ModelAndView qrPay(ModelMap model, HttpServletRequest request, HttpServletResponse response) {
 
@@ -287,8 +309,17 @@ public class GoodsOrderController {
         if(null == price || price.equals("")){
             price = request.getParameter("amount");
         }
-        String orderNo = request.getParameter("orderNo");
+
+        //对应第一次调用
+        String orderNo24 = request.getParameter("orderNo");
+        //对应第二次调用
+        if(null == orderNo24 || orderNo24.equals("")){
+            orderNo24 = request.getParameter("orderNo24");
+        }
+
+        //对应第一次调用
         String autoNotifyUrl = request.getParameter("notify_url");
+        //对应第二次调用
         if(null == autoNotifyUrl || autoNotifyUrl.equals("")){
             autoNotifyUrl = request.getParameter("autoNotifyUrl");
         }
@@ -331,8 +362,10 @@ public class GoodsOrderController {
         // 先插入订单数据
         GoodsOrder goodsOrder = null;
 
+//        String redirectUrl = QR_PAY_URL + "?amount=" + Long.valueOf(price) + "&assetId=" + assetId + "&goodsName="
+//                + goodsName + "&productNum=" + productNum + "&orderNo=" + orderNo + "&autoNotifyUrl=" + autoNotifyUrl;
         String redirectUrl = QR_PAY_URL + "?amount=" + Long.valueOf(price) + "&assetId=" + assetId + "&goodsName="
-                + goodsName + "&productNum=" + productNum + "&orderNo=" + orderNo + "&autoNotifyUrl=" + autoNotifyUrl;
+                + goodsName + "&productNum=" + productNum + "&orderNo24=" + orderNo24 + "&autoNotifyUrl=" + autoNotifyUrl;
 
         if ("alipay".equals(client)) {
             _log.info("{}{}扫码下单", logPrefix, "支付宝");
@@ -365,7 +398,7 @@ public class GoodsOrderController {
                 //查询中台自提订单数
                 int pickupCount = goodsOrderService.getSelfPickupCount(assetId, goodsId);
 
-                _log.info("机器:{} 购买用户:{} 提货状态:{}", assetId, userId, pickpuStatus.equals("0")? "未提货": "已提货");
+                _log.info("机器:{} 购买用户:{} 提货状态:{}", assetId, userId, pickpuStatus.equals("0") ? "未提货": !pickpuStatus.equals("-1") ? "已提货": "无提货单");
                 _log.info("{}机器上的商品{} 未取货数{}", assetId, goodsId, pickupCount);
                 _log.info("{}机器上的商品{} 库存数{}",assetId, goodsId, goodsStock);
 
@@ -383,7 +416,7 @@ public class GoodsOrderController {
                         modelAndView.setViewName(view);
                         return modelAndView;
                     }
-                }else {
+                }else if(pickpuStatus.equals("0")) {
                     _log.info("======  不走\"执行支付流程\", 直接通知24小时服务端出货 ======{}", autoNotifyUrl);
                     //API的请求消息内容
                     Map<String,String> body = new HashMap<String,String>();
@@ -406,9 +439,12 @@ public class GoodsOrderController {
                 //==============================执行支付流程==================================
                 _log.info("{}支付宝已获取userId:{}", logPrefix, userId);
                 Map params = new HashMap<>();
+                params.put("userId", userId);
                 params.put("channelId", channelId);
                 params.put("autoNotifyUrl", autoNotifyUrl);
+                params.put("orderNo24", orderNo24);
                 goodsOrder = createGoodsOrder(goodsId, Long.valueOf(price));
+                _log.info("{}24服务端生成的订单:{}", logPrefix, orderNo24);
                 orderMap = createPayOrder(goodsOrder, params);
             }
             else{
@@ -430,12 +466,76 @@ public class GoodsOrderController {
             String openId = request.getParameter("openId");
             _log.info("{}微信openId", request.getParameter("openId"));
             if (StringUtils.isNotBlank(openId)) {
+
+                //1.通过userId assetId goodsId 查询中台的订单:
+                //    ①:assetId goodsId查询自提订单数  ②:userId assetId productNum查询是否有未提货的订单
+                //2.通过assetId goodsId去24服务端查询机器中商品的库存
+                //3.判断是否走支付流程或是否售卖
+                //    没有未提货订单的用户:
+                //        ①:库存数小于等于自提订单数,不走"执行支付流程",并向用户返回"该商品不参与售卖"
+                //        ②:库存数大于自提订单数,则走"执行支付流程"
+                //    有未提货订单的用户:
+                //        ①:不走"执行支付流程", 直接通知24小时服务端出货
+
+                //24服务端查询机器中商品的库存
+                String goodsStock = inhandService.getGoodsStock(assetId, goodsId);
+
+                //查询中台是否有未提货的订单
+                String pickpuStatus = "0";
+                List<SelfPickup>  selfPickups = goodsOrderService.getSelfPickupList(assetId, goodsId, openId);
+                if(!selfPickups.isEmpty()){
+                    pickpuStatus = selfPickups.get(0).getIsPickUp();
+                }else{
+                    pickpuStatus = "-1";
+                }
+
+                //查询中台自提订单数
+                int pickupCount = goodsOrderService.getSelfPickupCount(assetId, goodsId);
+
+                _log.info("机器:{} 购买用户:{} 提货状态:{}", assetId, openId, pickpuStatus.equals("0") ? "未提货": !pickpuStatus.equals("-1") ? "已提货": "无提货单");
+                _log.info("{}机器上的商品{} 未取货数{}", assetId, goodsId, pickupCount);
+                _log.info("{}机器上的商品{} 库存数{}",assetId, goodsId, goodsStock);
+
+
+                //没有未提货订单的用户
+                if(!pickpuStatus.equals("0")){
+                    if(Integer.valueOf(goodsStock) <= pickupCount){
+                        String errorMessage = "该商品不参与售卖";
+                        orderMap = new HashMap<String, String>();
+                        orderMap.put("resCode", "FALSE");
+                        model.put("orderMap", orderMap);
+                        _log.info("{}信息：{}", logPrefix, errorMessage);
+                        model.put("result", "failed");
+                        model.put("resMsg", errorMessage);
+                        modelAndView.setViewName(view);
+                        return modelAndView;
+                    }
+                }else if(pickpuStatus.equals("0")) {
+                    _log.info("======  不走\"执行支付流程\", 直接通知24小时服务端出货 ======{}", autoNotifyUrl);
+                    //API的请求消息内容
+                    Map<String,String> body = new HashMap<String,String>();
+                    body.put("payStatus", "0");
+                    String result = Auto24ServiceUtil.request24Service(body, autoNotifyUrl, null);
+                    _log.info("通知24服务端出货结果:{}", result);
+
+                    String errorMessage = "已通知24服务端出货";
+                    orderMap = new HashMap<String, String>();
+                    orderMap.put("resCode", "FALSE");
+                    model.put("orderMap", orderMap);
+                    _log.info("{}信息：{}", logPrefix, errorMessage);
+                    model.put("result", "failed");
+                    model.put("resMsg", errorMessage);
+                    modelAndView.setViewName(view);
+                    return modelAndView;
+                }
+
+                //==============================执行支付流程==================================
                 _log.info("{}openId：{}", logPrefix, openId);
                 Map params = new HashMap<>();
                 params.put("channelId", channelId);
                 params.put("openId", openId);
                 params.put("autoNotifyUrl", autoNotifyUrl);
-                //先注释掉常见订单
+                params.put("orderNo24", orderNo24);
                 goodsOrder = createGoodsOrder(goodsId, Long.valueOf(price));
                 // 下单
                 orderMap = createPayOrder(goodsOrder, params);
@@ -649,7 +749,7 @@ public class GoodsOrderController {
     public void payNotify(HttpServletRequest request, HttpServletResponse response) throws Exception {
         _log.info("====== 开始处理支付中心通知 ======");
         Map<String,Object> paramMap = request2payResponseMap(request, new String[]{
-                "payOrderId","mchId","mchOrderNo","channelId","autoNotifyUrl","amount","currency","status", "clientIp",
+                "orderNo24", "payOrderId","mchId","mchOrderNo","channelId","autoNotifyUrl","amount","currency","status", "clientIp",
                 "device",  "subject", "channelOrderNo", "param1",
                 "param2","paySuccTime","backType","sign"
         });
@@ -660,8 +760,7 @@ public class GoodsOrderController {
             outResult(response, "fail");
             return;
         }
-//        String payOrderId = (String) paramMap.get("payOrderId");
-        String payOrderId = (String) paramMap.get("orderId");
+        String payOrderId = (String) paramMap.get("payOrderId");
         String mchOrderNo = (String) paramMap.get("mchOrderNo");
         String resStr;
         try {

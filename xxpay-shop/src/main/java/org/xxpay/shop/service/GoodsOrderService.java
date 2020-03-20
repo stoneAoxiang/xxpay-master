@@ -36,6 +36,10 @@ public class GoodsOrderService {
         return goodsOrderMapper.selectByPrimaryKey(goodsOrderId);
     }
 
+//    public List<GoodsOrder> getGoodsOrder(String orderNo24) {
+//        return goodsOrderMapper.selectByExample(orderNo24);
+//    }
+
     public List<SelfPickup> getSelfPickupList(String assetId, String goodsId, String BuyerId){
         SelfPickupExample example = new SelfPickupExample();
         SelfPickupExample.Criteria cri = example.createCriteria();

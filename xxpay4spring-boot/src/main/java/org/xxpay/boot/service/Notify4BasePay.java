@@ -7,9 +7,9 @@ import org.xxpay.common.constant.PayConstant;
 import org.xxpay.common.util.MyLog;
 import org.xxpay.common.util.PayDigestUtil;
 import org.xxpay.common.util.XXPayUtil;
+import org.xxpay.boot.service.mq.Mq4PayNotify;
 import org.xxpay.dal.dao.model.MchInfo;
 import org.xxpay.dal.dao.model.PayOrder;
-import org.xxpay.boot.service.mq.Mq4PayNotify;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -103,7 +103,7 @@ public class Notify4BasePay extends BaseService {
 		// 发起后台通知业务系统
 		JSONObject object = createNotifyInfo(payOrder);
 		try {
-			_log.info("发起后台通知参数:{}", object.toJSONString());
+			_log.info("调用 mq4PayNotify.send() 发起后台通知参数:{}", object.toJSONString());
 			mq4PayNotify.send(object.toJSONString());
 		} catch (Exception e) {
 			_log.error("payOrderId={},sendMessage error.", payOrder != null ? payOrder.getPayOrderId() : "", e);

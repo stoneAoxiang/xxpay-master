@@ -4,7 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.xxpay.dal.dao.mapper.MchNotifyMapper;
-import org.xxpay.dal.dao.mapper.MchNotifyMapper;
 import org.xxpay.dal.dao.model.MchNotify;
 import org.xxpay.dal.dao.model.MchNotifyExample;
 

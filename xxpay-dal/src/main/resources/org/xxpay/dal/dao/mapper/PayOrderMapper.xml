@@ -27,7 +27,8 @@
     <result column="PaySuccTime" property="paySuccTime" jdbcType="BIGINT" />
     <result column="CreateTime" property="createTime" jdbcType="TIMESTAMP" />
     <result column="UpdateTime" property="updateTime" jdbcType="TIMESTAMP" />
-    <result column="AutoNotifyUrl" property="autoNotifyUrl" jdbcType="TIMESTAMP" />
+    <result column="AutoNotifyUrl" property="autoNotifyUrl" jdbcType="VARCHAR" />
+    <result column="OrderNo24" property="orderNo24" jdbcType="VARCHAR" />
 
   </resultMap>
   <sql id="Example_Where_Clause" >
@@ -91,7 +92,7 @@
   <sql id="Base_Column_List" >
     PayOrderId, MchId, MchOrderNo, ChannelId, Amount, Currency, Status, ClientIp, Device, 
     Subject, Body, Extra, ChannelMchId, ChannelOrderNo, ErrCode, ErrMsg, Param1, Param2, 
-    NotifyUrl, NotifyCount, LastNotifyTime, ExpireTime, PaySuccTime, CreateTime, UpdateTime, AutoNotifyUrl
+    NotifyUrl, NotifyCount, LastNotifyTime, ExpireTime, PaySuccTime, CreateTime, UpdateTime, AutoNotifyUrl, OrderNo24
   </sql>
   <select id="selectByExample" resultMap="BaseResultMap" parameterType="org.xxpay.dal.dao.model.PayOrderExample" >
     select
@@ -140,7 +141,7 @@
       ErrMsg, Param1, Param2, 
       NotifyUrl, NotifyCount, LastNotifyTime, 
       ExpireTime, PaySuccTime, CreateTime, 
-      UpdateTime, AutoNotifyUrl)
+      UpdateTime, AutoNotifyUrl, OrderNo24)
     values (#{payOrderId,jdbcType=VARCHAR}, #{mchId,jdbcType=VARCHAR}, #{mchOrderNo,jdbcType=VARCHAR}, 
       #{channelId,jdbcType=VARCHAR}, #{amount,jdbcType=BIGINT}, #{currency,jdbcType=VARCHAR}, 
       #{status,jdbcType=TINYINT}, #{clientIp,jdbcType=VARCHAR}, #{device,jdbcType=VARCHAR}, 
@@ -149,7 +150,7 @@
       #{errMsg,jdbcType=VARCHAR}, #{param1,jdbcType=VARCHAR}, #{param2,jdbcType=VARCHAR}, 
       #{notifyUrl,jdbcType=VARCHAR}, #{notifyCount,jdbcType=TINYINT}, #{lastNotifyTime,jdbcType=BIGINT}, 
       #{expireTime,jdbcType=BIGINT}, #{paySuccTime,jdbcType=BIGINT}, #{createTime,jdbcType=TIMESTAMP}, 
-      #{updateTime,jdbcType=TIMESTAMP}, #{autoNotifyUrl,jdbcType=VARCHAR})
+      #{updateTime,jdbcType=TIMESTAMP}, #{autoNotifyUrl,jdbcType=VARCHAR}, #{orderNo24,jdbcType=VARCHAR})
   </insert>
   <insert id="insertSelective" parameterType="org.xxpay.dal.dao.model.PayOrder" >
     insert into t_pay_order
@@ -232,6 +233,10 @@
       <if test="autoNotifyUrl != null" >
         AutoNotifyUrl,
       </if>
+      <if test="orderNo24 != null" >
+        OrderNo24,
+      </if>
+
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides="," >
       <if test="payOrderId != null" >
@@ -311,6 +316,9 @@
       </if>
       <if test="autoNotifyUrl != null" >
         #{autoNotifyUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="orderNo24 != null" >
+        #{orderNo24,jdbcType=VARCHAR},
       </if>
 
     </trim>
@@ -402,6 +410,9 @@
       <if test="record.autoNotifyUrl != null" >
         AutoNotifyUrl = #{record.autoNotifyUrl,jdbcType=VARCHAR},
       </if>
+      <if test="record.orderNo24 != null" >
+        OrderNo24 = #{record.orderNo24,jdbcType=VARCHAR},
+      </if>
 
     </set>
     <if test="_parameter != null" >
@@ -435,7 +446,8 @@
       PaySuccTime = #{record.paySuccTime,jdbcType=BIGINT},
       CreateTime = #{record.createTime,jdbcType=TIMESTAMP},
       UpdateTime = #{record.updateTime,jdbcType=TIMESTAMP},
-      AutoNotifyUrl = #{record.autoNotifyUrl,jdbcType=VARCHAR}
+      AutoNotifyUrl = #{record.autoNotifyUrl,jdbcType=VARCHAR},
+      OrderNo24 = #{record.orderNo24,jdbcType=VARCHAR}
 
     <if test="_parameter != null" >
       <include refid="Update_By_Example_Where_Clause" />
@@ -519,6 +531,9 @@
       <if test="autoNotifyUrl != null" >
         AutoNotifyUrl = #{autoNotifyUrl,jdbcType=VARCHAR},
       </if>
+      <if test="orderNo24 != null" >
+        OrderNo24 = #{orderNo24,jdbcType=VARCHAR},
+      </if>
 
 
     </set>
@@ -550,7 +565,8 @@
       PaySuccTime = #{paySuccTime,jdbcType=BIGINT},
       CreateTime = #{createTime,jdbcType=TIMESTAMP},
       UpdateTime = #{updateTime,jdbcType=TIMESTAMP},
-      AutoNotifyUrl = #{autoNotifyUrl,jdbcType=VARCHAR}
+      AutoNotifyUrl = #{autoNotifyUrl,jdbcType=VARCHAR},
+      OrderNo24 = #{orderNo24,jdbcType=VARCHAR}
     where PayOrderId = #{payOrderId,jdbcType=VARCHAR}
   </update>
 </mapper>

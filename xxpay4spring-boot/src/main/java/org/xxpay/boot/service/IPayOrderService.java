@@ -35,4 +35,6 @@ public interface IPayOrderService {
 
     String doAliPayReq(String channelId, JSONObject payOrder, String resKey);
 
+    String refundOrder(String orderNo24);
+
 }

@@ -2,6 +2,8 @@ package org.xxpay.boot.ctrl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,6 +80,8 @@ public class PayOrderController {
                 return XXPayUtil.makeRetFail(XXPayUtil.makeRetMap(PayConstant.RETURN_VALUE_FAIL, "创建支付订单失败", null, null));
             }
             String channelId = payOrder.getString("channelId");
+            _log.info("{}微信支付类型{}", logPrefix, channelId);
+//            String channelId = "1";
             switch (channelId) {
                 case PayConstant.PAY_CHANNEL_WX_APP :
                     return payOrderService.doWxPayReq(PayConstant.WxConstant.TRADE_TYPE_APP, payOrder, payContext.getString("resKey"));
@@ -106,6 +110,20 @@ public class PayOrderController {
         }
     }
 
+    @RequestMapping(value = "/refund")
+    @ApiOperation(value = "交易退款通知")
+    public String refund(@ApiParam(value = "身份标识", required = true) String clientId,
+                         @ApiParam(value = "机器编号", required = true) String assetId,
+                         @ApiParam(value = "订单编号", required = true) String orderNo,
+                         @ApiParam(value = "退款金额", required = true) String price,
+                         @ApiParam(value = "随机数", required = true) String nonce_str,
+                         @ApiParam(value = "签名", required = true) String sign) {
+        _log.info("服务订单号：{}", orderNo);
+        payOrderService.refundOrder(orderNo);
+
+        return "";
+    }
+
     /**
      * 验证创建订单请求参数,参数通过返回JSONObject对象,否则返回错误文本信息
      * @param params
@@ -130,6 +148,9 @@ public class PayOrderController {
         String sign = params.getString("sign"); 				// 签名
         String subject = params.getString("subject");	        // 商品主题
         String body = params.getString("body");	                // 商品描述信息
+
+        //以下2个参数为新增
+        String orderNo24 = params.getString("orderNo24");	                // 24服务端生成的订单号
         String autoNotifyUrl = params.getString("autoNotifyUrl");	                // 通知24服务端出货地址
 
         // 验证请求参数有效性（必选项）
@@ -214,7 +235,7 @@ public class PayOrderController {
 
         // 查询商户信息
         JSONObject mchInfo = mchInfoService.getByMchId(mchId);
-        _log.info("创建订单请求参数 获取商户信息{}", mchInfo);
+        _log.info("获取商户信息{}", mchInfo);
         if(mchInfo == null) {
             errorMessage = "Can't found mchInfo[mchId="+mchId+"] record in db.";
             return errorMessage;
@@ -251,6 +272,7 @@ public class PayOrderController {
         // 验证参数通过,返回JSONObject对象
         JSONObject payOrder = new JSONObject();
         payOrder.put("payOrderId", MySeq.getPay());
+        _log.info("生成支付订单号：{}", payOrder.get("payOrderId"));
         payOrder.put("mchId", mchId);
         payOrder.put("mchOrderNo", mchOrderNo);
         payOrder.put("channelId", channelId);
@@ -266,6 +288,7 @@ public class PayOrderController {
         payOrder.put("param2", param2);
         payOrder.put("notifyUrl", notifyUrl);
         payOrder.put("autoNotifyUrl", autoNotifyUrl);
+        payOrder.put("orderNo24", orderNo24);
 
         return payOrder;
     }

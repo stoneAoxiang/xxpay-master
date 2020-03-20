@@ -29,8 +29,8 @@ spring:
        #- rabbitMQ # 需要安装延迟队列插件：https://www.rabbitmq.com/blog/2015/04/16/scheduling-messages-with-rabbitmq/
 
   activemq:
-#    broker-url: failover:(tcp://113.204.73.210:61616?wireFormat.maxInactivityDuration=0)
-    broker-url: failover:(tcp://172.200.40.58:61616?wireFormat.maxInactivityDuration=0)
+    broker-url: failover:(tcp://127.0.0.1:61616?wireFormat.maxInactivityDuration=0)
+#    broker-url: failover:(tcp://172.200.40.58:61616?wireFormat.maxInactivityDuration=0)
     in-memory: true
 #    pool:
 #      enabled: true # 如果此处设置为true，需要加activemq-pool依赖包，否则会自动配置失败，报JmsMessagingTemplate注入失败
@@ -48,9 +48,8 @@ config:
     return_url: http://mall-h5-test.dev.tianyoudairy.com
   wx:
     certRootPath: C:\Users\Administrator\xxpay\cert
-#    notifyUrl: http://api.xxpay.org/notify/pay/wxPayNotifyRes.htm
-#    notifyUrl: http://113.207.110.34:3020/notify/pay/wxPayNotifyRes.htm
-    notifyUrl: https://www.baidu.com
+    notifyUrl: http://113.207.110.34:3020/notify/pay/wxPayNotifyRes.htm
+    refundNotifyUrl: http://113.207.110.34:3020/notify/pay/wxRefundNotifyRes.htm
 
 logging:
   file: ./log/xxpay4spring-boot.log

@@ -139,6 +139,7 @@ public class NotifyPayServiceImpl extends Notify4BasePay implements INotifyPaySe
                 payOrder.setChannelOrderNo(result.getTransactionId());
             }
             // 业务系统后端通知
+            _log.info("开始调用处理支付结果后台服务器通知");
             doNotify(payOrder);
             _log.info("====== 完成处理微信支付回调通知 ======");
             return RpcUtil.createBizResult(baseParam, WxPayNotifyResponse.success("OK"));
